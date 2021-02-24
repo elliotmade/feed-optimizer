@@ -6,18 +6,18 @@ def printAttributes(object):
     attrs = vars(object)
     print(''.join("%s: %s \n" % item for item in attrs.items()))
 
-class elliotConfig: #object to store all configuration variables for the main process
+class appConfig: #object to store all configuration variables for the main process
     #need to make a duplicate for storing default values, give the class a copy method and use a copy for the one sent to the processing function
     inPath = ''
-    outPath = 'sample files\\test-output.txt'
+    outPath = 'sample_files\\test-output.txt'
     outCsv = True
-    outCsvPath = 'sample files\output-csv.csv'
+    outCsvPath = 'sample_files\debug_output.csv'
     eob = ';'
     rLineNum = False
-    renumber = True
+    renumber = False
     numInc = 10
-    rComments = True
-    rBlankLines = True
+    rComments = False
+    rBlankLines = False
     rSpaces = False
     rShortLines = False
     rTrailingZeroes = True
@@ -27,16 +27,16 @@ class elliotConfig: #object to store all configuration variables for the main pr
     feedCeiling = 77
     reduceFeed = False
     optimizePercent = 100 #0 to whatever whole number
-    diffThreshold = .5 #done smallest feed rate to change for
+    minFeed = False
+    minFeedLimit = .25
+    diffThreshold = .5  #done smallest feed rate to change for
 
-    optimizeType = 0 #0 for memory, 1 for drip feed
-    memLineMs = 100     #base time to process a line (blocks/lines per second that the control does, regardless of length)
-    memCharMs = 4       #additional time per character in a line 300 char/sec for fanuc 6m tape reader?
-    tapeLineMs = 200
-    tapeCharMs = 8
+    optimizeType = 0    #0 for memory, 1 for drip feed
 
+    lineMs = 100
+    charMs = 8
 
-class elliotFrame(ui.main_frame):
+class appFrame(ui.main_frame):
     #constructor
     def __init__(self,parent):
         #initialize parent class
@@ -65,14 +65,16 @@ class elliotFrame(ui.main_frame):
             self.increase_feed_checkbox.Enable()
             self.reduce_feed_checkbox.Enable()
             self.feed_limit_text.Enable()
-            self.feed_percent_text.Enable()
-            self.optimize_type_radio.Enable()
+            self.reduce_feed_slider.Enable()
+            self.min_feed_checkbox.Enable()
+            self.min_feed_text.Enable()
         else:
             self.increase_feed_checkbox.Disable()
             self.reduce_feed_checkbox.Disable()
             self.feed_limit_text.Disable()
-            self.feed_percent_text.Disable()
-            self.optimize_type_radio.Disable()
+            self.reduce_feed_slider.Disable()
+            self.min_feed_checkbox.Disable()
+            self.min_feed_text.Disable()
 
     def csv_enable(self, event):
         if self.csv_checkbox.GetValue() == True:
@@ -111,28 +113,31 @@ class elliotFrame(ui.main_frame):
         #cf.shortThreshold = .001 #done-
         cf.optimizeFeed = self.optimize_feed_checkbox.GetValue()
         cf.reduceFeed = self.reduce_feed_checkbox.GetValue()
+        cf.minFeed = self.min_feed_checkbox.GetValue()
         if cf.optimizeFeed == False: #negate the values of some selections that are disabled
             cf.increaseFeed == False
             cf.optimizePercent = 100
+            cf.minFeed == False
         else:
             cf.increaseFeed = self.increase_feed_checkbox.GetValue()
             if cf.reduceFeed == True:
-                cf.optimizePercent = int(self.feed_percent_text.GetValue())
+                cf.optimizePercent = int(self.reduce_feed_slider.GetValue())
             else:
                 cf.optimizePercent = 100
+            if cf.minFeed == True:
+                cf.minFeedLimit = float(self.min_feed_text.GetValue())
         
         cf.feedCeiling = float(self.feed_limit_text.GetValue())
         #cf.minTimeSaving = 300 #don't bother increasing the feed rate if it saves less than this, to preserve file size (milliseconds) (not implemented yet)
 
-        cf.diffThreshold = float(self.small_feed_diff_text.GetValue()) #done smallest feed rate to change for #not in UI yet
-
-        cf.optimizeType = self.optimize_type_radio.GetSelection()
-        cf.memLineMs = int(self.mem_block_text.GetValue())
-        cf.memCharMs = int(self.mem_char_text.GetValue())
-        cf.tapeLineMs = int(self.drip_block_text.GetValue())
-        cf.tapeCharMs = int(self.drip_char_text.GetValue())
         
 
+        cf.diffThreshold = float(self.small_feed_diff_text.GetValue()) #done smallest feed rate to change for #not in UI yet
+
+
+        cf.lineMs = int(self.time_block_slider.GetValue())
+        cf.charMs = int(self.time_char_slider.GetValue() / 10)
+        
     def write_form_config(self, inConfig): #write a config object into the form
         self.input_text.SetValue(inConfig.inPath)
         self.output_text.SetValue(inConfig.outPath)
@@ -142,16 +147,36 @@ class elliotFrame(ui.main_frame):
         self.increase_feed_checkbox.SetValue(inConfig.increaseFeed)
         self.feed_limit_text.SetValue(str(inConfig.feedCeiling))
         self.reduce_feed_checkbox.SetValue(inConfig.reduceFeed)
-        self.feed_percent_text.SetValue(str(inConfig.optimizePercent))
+        self.reduce_feed_slider.SetValue(inConfig.optimizePercent)
         self.csv_checkbox.SetValue(inConfig.outCsv)
 
-        self.mem_block_text.SetValue(str(inConfig.memLineMs))
-        self.mem_char_text.SetValue(str(inConfig.memCharMs))
-        self.drip_block_text.SetValue(str(inConfig.tapeLineMs))
-        self.drip_char_text.SetValue(str(inConfig.tapeCharMs))
+        self.time_block_slider.SetValue(inConfig.lineMs)
+        self.time_char_slider.SetValue(inConfig.charMs * 10)
         self.small_feed_diff_text.SetValue(str(inConfig.diffThreshold))
         self.linenum_increment_text.SetValue(str(inConfig.numInc))
+        self.min_feed_checkbox.SetValue(inConfig.minFeed)
+        self.min_feed_text.SetValue(str(inConfig.minFeedLimit))
 
+    def write_results(self, result, config): #print out the contents of the result object
+        #first clear the text
+        self.result_text.Clear()
+        self.result_text.AppendText('Input File:\t\t\t' + config.inPath +'\n')
+        self.result_text.AppendText('Output File:\t\t' + config.outPath +'\n')
+        self.result_text.AppendText('\n')
+        self.result_text.AppendText('Original File Size:\t\t' + str(round(result.inFileSize/1024,1)) + ' kb\n')
+        self.result_text.AppendText('Original File Lines:\t\t' + str(result.inFileLines) + '\n')
+        self.result_text.AppendText('Original Estimated Time:\t' + str(round(result.inFileTime/60)) + ' seconds\n')
+        self.result_text.AppendText('\n')
+        self.result_text.AppendText('Short moves under ' + str(config.shortThreshold) + ':\t' + str(result.shortMoves) + '\n')
+        self.result_text.AppendText('Lines causing dwell:\t\t' + str(result.dwellLines) + '\n')
+        self.result_text.AppendText('\n')
+        self.result_text.AppendText('New File Size:\t\t' + str(round(result.outFileSize/1024,1)) + ' kb\n')
+        self.result_text.AppendText('New File Lines:\t\t' + str(result.outFileLines) + '\n')
+        self.result_text.AppendText('New Estimated Time:\t\t' + str(round(result.outFileTime/60)) + ' seconds\n')
+        self.result_text.AppendText('\n')
+        self.result_text.AppendText('Time Difference:\t\t' + str((result.outFileTime - result.inFileTime) // 1000) + ' seconds\n')
+
+        self.main_notebook.ChangeSelection(4)
 
     def go(self, event): #read the state of all inputs, then kick off the main process
         self.read_form_config()
@@ -164,19 +189,17 @@ class elliotFrame(ui.main_frame):
         print('Original  : ' + str(out_result.inFileTime // 1000) + ' Seconds')
         print('New       : ' + str(out_result.outFileTime // 1000) + ' Seconds')
         print('Difference: ' + str((out_result.outFileTime - out_result.inFileTime) // 1000) + ' Seconds')
-
+        self.write_results(out_result, cf)
 
 if __name__ == '__main__':
     app = wx.App()
-    frame = elliotFrame(None)
+    frame = appFrame(None)
     frame.Show(True)
-    defaultConfig = elliotConfig() #create a default configuration object
+    defaultConfig = appConfig() #create a default configuration object
     frame.write_form_config(defaultConfig) #and write it to the form
     frame.optimize_enable(None)
     frame.csv_enable(None)
-    #import wx.lib.inspection
-    #wx.lib.inspection.InspectionTool().Show()
     
-    cf = elliotConfig()
+    cf = appConfig()
     app.MainLoop()
 
