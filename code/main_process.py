@@ -3,22 +3,25 @@
 #comments on same line as a command - fixed
 #commas in comments mess up csv output - fixed
 #extra space at the end of a string before the EOB when a comment was removed
-#percent sign at start and finish - fixed the start
+#percent sign at start and finish - fixed
 #need to ignore M0's for the purpose of feed rate calculation - done
 #line that is only a comment but becomes blank is still printed, it should be removed - fixed
-#renumbering doesn't replace existing N word
+#renumbering doesn't replace existing N word - fixed
 #feed rate is still increased even if the box is not checked - fixed
 #the percent on the last line is lost
 #time comparison results not implemented
 #error in calcDistance for helical arcs - radius and angle are bogus.  Consider discarding the "Z" axis? - fixed, needs testing
+#renumbering renumbers lines that don't need one - like the program number - fixed (except for comment, but probably don't care)
+#remove comments just makes blank lines - is that OK?
 
 #todo:
-#Move go button to the bottom outside of the tabs
-#Get rid of the optimize type selector
-#add minimum feed rate
-#change machine settings to sliders.  Get rid of memory option
+#Move go button to the bottom outside of the tabs - done
+#Get rid of the optimize type selector - done
+#add minimum feed rate - done
+#change machine settings to sliders.  Get rid of memory option - done
 #save and restore settings - and memorize last used output file.  Maybe just auto-save on go and exit, then auto load on open?  Or better to save as default?
-
+#CR/LF?
+#incremental programs are untested, also metric
 
 import re
 import math
@@ -225,7 +228,7 @@ class result:
     distance = 0
 
 def calcReadTime(charCount, c):
-    return (charCount * c.tapeCharMs) + c.memLineMs
+    return (charCount * c.charMs) + c.lineMs
 
 def calcMoveTime(distance, feed):
     if distance == 0 or feed == 0 or distance is None: time = 0
@@ -268,14 +271,6 @@ def lineToString(chunks, c, num = 0): #transform a list of chunks into a single 
     outString = ''
     for chunk in chunks:
         chunk = chunk.strip()
-        #if chunk[0] == 'N': 
-        #    pass
-        #    if c.rLineNum == True:
-        #        pass
-        #    elif c.renumber == True:
-        #        outString += 'N' + str(num * c.numInc)
-        #    else:
-        #        outString += str(chunk)
         
         if c.rTrailingZeroes == True and chunk.find('.') >= 0:
             outString += str(chunk).rstrip('0')
@@ -315,6 +310,13 @@ def calcFinalFeed(line, prevFeed, c): #using the configuration options, figure o
         else: #just use the original feed
             finalFeed = line.f
     
+    if c.minFeed == True: #if there is a floor, lift up any smaller ones to that level
+        if finalFeed < c.minFeedLimit:
+            finalFeed = c.minFeedLimit
+
+    if c.reduceFeed == True: #if there is a multiplier, do it
+        finalFeed *= round(c.optimizePercent/100,1)
+
     #then compare it to the previous line, and don't bother changing if it's too close
     if abs(finalFeed - prevFeed) < c.diffThreshold:
         finalFeed = prevFeed
@@ -417,8 +419,8 @@ def process_files(c):
             if c.rLineNum == True and outLine.isBlank == False: #remove them
                 for chunk in lines[curOutLine].lineChunks:
                     if chunk[0] == 'N': lines[curOutLine].lineChunks.remove(chunk)
-            elif c.renumber == True and outLine.isBlank == False: #Replace or add numbers
-                if lines[curOutLine].lineChunks[0] == 'N': #replace this chunk with a new one (Assume it is the first chunk, this could lead to bugs)
+            elif c.renumber == True and outLine.isBlank == False and lines[curOutLine].lineChunks[0][0] != 'O': #Replace or add numbers
+                if lines[curOutLine].lineChunks[0][0] == 'N': #replace this chunk with a new one (Assume it is the first chunk, this could lead to bugs)
                     lines[curOutLine].lineChunks[0] = 'N' + str(outNumber)
                     outNumber += c.numInc
                 else: #add a new chunk
