@@ -22,6 +22,7 @@
 #save and restore settings - and memorize last used output file.  Maybe just auto-save on go and exit, then auto load on open?  Or better to save as default?
 #CR/LF?
 #incremental programs are untested, also metric
+#boop
 
 import re
 import math
