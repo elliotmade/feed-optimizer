@@ -6,3 +6,4 @@
 settings.ini
 code/__pycache__/main_process.cpython-39.pyc
 .test
+code/__pycache__/feed_ui.cpython-39.pyc
