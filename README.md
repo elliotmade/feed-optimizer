@@ -11,7 +11,7 @@ Beyond buying a newer machine or retrofitting an old one, there are some strateg
 * Avoiding very short line segments
 * Tweaking options in the CAM software to generate arcs to cut surfaces instead of lines
 * Physically decreasing the size of the file by removing line numbers, spaces, comments, etc
-* **Lowering the overall feed rate in the program or overriding on the control
+* **Lowering the overall feed rate in the program or overriding on the control**
 
 ## The Goal:
 Adjust the feed rates as required on a line-by-line basis so that the next program line is ready to go just as the previous one is completed, thereby smoothing out the motion.  The effectiveness will depend on nature of the original program, and it may be possible to shorten the run time in situations where the feed rate had been lowered to the lowest smooth speed (sacrificing speed on longer moves to prevent dwelling on short ones).
