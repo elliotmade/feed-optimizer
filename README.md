@@ -4,7 +4,7 @@ Strategically adjust the feed rate in a GCODE file to allow smooth cuts when dri
 ## The problem to solve:
 Older CNC controls with limited memory can be "drip fed" a program in a variety of ways that are typically quite slow by today's standards.  As an example, the Fanuc 6MB can be fitted with an emulator for the punched paper tape reader, allowing it to run any length/size of file, streamed from a PC via serial.  There is a limit to how fast data can be transferred resulting in a situation where the physical movement of the machine is completed before the next instruction has been read.  The result is a tool that dwells between lines - making awful sounds, bad surface finish, poor tool life, etc.
 
-![example](img/example diagram.png)
+![example](img/example_diagram.png)
 
 ## Strategies:
 Beyond buying a newer machine or retrofitting an old one, there are some strategies to mitigate this issue that are beyond the scope of this project, including:
