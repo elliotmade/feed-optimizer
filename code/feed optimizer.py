@@ -1,6 +1,8 @@
 import wx
 import feed_ui as ui
 import main_process
+import configparser
+import os
 
 def printAttributes(object):
     attrs = vars(object)
@@ -9,29 +11,27 @@ def printAttributes(object):
 class appConfig: #object to store all configuration variables for the main process
     #need to make a duplicate for storing default values, give the class a copy method and use a copy for the one sent to the processing function
     inPath = ''
-    outPath = 'sample_files\\test-output.txt'
+    outPath = ''
     outCsv = True
-    outCsvPath = 'sample_files\debug_output.csv'
+    outCsvPath = ''
     eob = ';'
+    lineOption = 0
     rLineNum = False
     renumber = False
     numInc = 10
     rComments = False
     rBlankLines = False
     rSpaces = False
-    rShortLines = False
     rTrailingZeroes = True
     shortThreshold = .001
     optimizeFeed = False
     increaseFeed = False
     feedCeiling = 77
     reduceFeed = False
-    optimizePercent = 100 #0 to whatever whole number
+    optimizePercent = 100
     minFeed = False
     minFeedLimit = .25
-    diffThreshold = .5  #done smallest feed rate to change for
-
-    optimizeType = 0    #0 for memory, 1 for drip feed
+    diffThreshold = .3 
 
     lineMs = 100
     charMs = 8
@@ -68,6 +68,8 @@ class appFrame(ui.main_frame):
             self.reduce_feed_slider.Enable()
             self.min_feed_checkbox.Enable()
             self.min_feed_text.Enable()
+            self.small_feed_diff_text.Enable()
+            self.small_feed_desc.Enable()
         else:
             self.increase_feed_checkbox.Disable()
             self.reduce_feed_checkbox.Disable()
@@ -75,6 +77,8 @@ class appFrame(ui.main_frame):
             self.reduce_feed_slider.Disable()
             self.min_feed_checkbox.Disable()
             self.min_feed_text.Disable()
+            self.small_feed_diff_text.Disable()
+            self.small_feed_desc.Disable()
 
     def csv_enable(self, event):
         if self.csv_checkbox.GetValue() == True:
@@ -91,11 +95,11 @@ class appFrame(ui.main_frame):
         cf.outCsvPath = self.csv_text.GetValue()
         cf.eob = self.eob_text.GetValue()
        
-        lineOption = self.linenum_radio.GetSelection()
-        if lineOption == 0:
+        cf.lineOption = self.linenum_radio.GetSelection()
+        if cf.lineOption == 0:
             cf.rLineNum = False
             cf.renumber = False
-        elif lineOption == 1:
+        elif cf.lineOption == 1:
             cf.rLineNum = True
             cf.renumber = False
         else:
@@ -107,8 +111,6 @@ class appFrame(ui.main_frame):
         cf.rComments = self.remove_comments_checkbox.GetValue()
         cf.rBlankLines = self.remove_blanks_checkbox.GetValue()
         cf.rTrailingZeroes = self.remove_zeroes_checkbox.GetValue()
-
-
         #cf.rShortLines = False not on UI yet
         #cf.shortThreshold = .001 #done-
         cf.optimizeFeed = self.optimize_feed_checkbox.GetValue()
@@ -129,33 +131,36 @@ class appFrame(ui.main_frame):
         
         cf.feedCeiling = float(self.feed_limit_text.GetValue())
         #cf.minTimeSaving = 300 #don't bother increasing the feed rate if it saves less than this, to preserve file size (milliseconds) (not implemented yet)
-
-        
-
         cf.diffThreshold = float(self.small_feed_diff_text.GetValue()) #done smallest feed rate to change for #not in UI yet
-
-
         cf.lineMs = int(self.time_block_slider.GetValue())
         cf.charMs = int(self.time_char_slider.GetValue() / 10)
-        
+        return cf
+
     def write_form_config(self, inConfig): #write a config object into the form
         self.input_text.SetValue(inConfig.inPath)
         self.output_text.SetValue(inConfig.outPath)
+        self.csv_checkbox.SetValue(inConfig.outCsv)
         self.csv_text.SetValue(inConfig.outCsvPath)
-        self.eob_text.SetValue(inConfig.eob)
+
         self.optimize_feed_checkbox.SetValue(inConfig.optimizeFeed)
         self.increase_feed_checkbox.SetValue(inConfig.increaseFeed)
         self.feed_limit_text.SetValue(str(inConfig.feedCeiling))
         self.reduce_feed_checkbox.SetValue(inConfig.reduceFeed)
         self.reduce_feed_slider.SetValue(inConfig.optimizePercent)
-        self.csv_checkbox.SetValue(inConfig.outCsv)
-
-        self.time_block_slider.SetValue(inConfig.lineMs)
-        self.time_char_slider.SetValue(inConfig.charMs * 10)
-        self.small_feed_diff_text.SetValue(str(inConfig.diffThreshold))
-        self.linenum_increment_text.SetValue(str(inConfig.numInc))
         self.min_feed_checkbox.SetValue(inConfig.minFeed)
         self.min_feed_text.SetValue(str(inConfig.minFeedLimit))
+        self.small_feed_diff_text.SetValue(str(inConfig.diffThreshold))
+        
+        self.remove_blanks_checkbox.SetValue(inConfig.rBlankLines)
+        self.remove_comments_checkbox.SetValue(inConfig.rComments)
+        self.remove_spaces_checkbox.SetValue(inConfig.rSpaces)
+        self.remove_zeroes_checkbox.SetValue(inConfig.rTrailingZeroes)
+        self.linenum_increment_text.SetValue(str(inConfig.numInc))
+        self.eob_text.SetValue(inConfig.eob)
+        self.linenum_radio.SetSelection(inConfig.lineOption)
+        
+        self.time_block_slider.SetValue(inConfig.lineMs)
+        self.time_char_slider.SetValue(inConfig.charMs * 10)
 
     def write_results(self, result, config): #print out the contents of the result object
         #first clear the text
@@ -178,28 +183,100 @@ class appFrame(ui.main_frame):
 
         self.main_notebook.ChangeSelection(4)
 
+    def readConfig(self, c): #find and open a config file, or if it doesn't exist, create it with the defaults
+        config = configparser.ConfigParser()
+        if not os.path.exists('settings.ini'):
+            self.writeConfig(c)
+        else: #read the file
+            config.read('settings.ini')
+            c.inPath = config['FILES']['InputFile']
+            c.outPath = config['FILES']['OutputFile']
+            c.outCsv = config['FILES'].getboolean('CSVOutput')
+            c.outCsvPath = config['FILES']['CSVFile']
+
+            c.optimizeFeed = config['FEED'].getboolean('Optimize_Enabled')
+            c.increaseFeed = config['FEED'].getboolean('Increase_Enabled')
+            c.feedCeiling = float(config['FEED']['Max_Feed'])
+            c.reduceFeed = config['FEED'].getboolean('Modify_Feed_Enabled')
+            c.optimizePercent = int(config['FEED']['Modify_Feed_Percent'])
+            c.minFeed = config['FEED'].getboolean('Min_Feed_Enabled')
+            c.minFeedLimit = float(config['FEED']['Min_Feed'])
+            c.diffThreshold = float(config['FEED']['Diff_Threshold'])
+
+            c.lineOption = int(config['FILE_OPTIONS']['Line_Number_Option'])
+            c.numInc = int(config['FILE_OPTIONS']['Line_Number_Increment'])
+            c.rBlankLines = config['FILE_OPTIONS'].getboolean('Remove_Blank_Lines')
+            c.rComments = config['FILE_OPTIONS'].getboolean('Remove_Comments')
+            c.rSpaces = config['FILE_OPTIONS'].getboolean('Remove_Spaces')
+            c.rTrailingZeroes = config['FILE_OPTIONS'].getboolean('Remove_Trailing_Zeroes')
+            c.eob = config['FILE_OPTIONS']['End_of_block']
+
+            c.lineMs = int(config['OTHER']['Block_time_factor'])
+            c.charMs = int(config['OTHER']['Char_time_factor'])
+            c.shortThreshold = float(config['OTHER']['Short_move_threshold'])
+
+            self.write_form_config(c)
+
+        return c
+
+    def writeConfig(self, c): #write a configuration file
+        config = configparser.ConfigParser()
+        config['FILES'] = {}
+        config['FILES']['InputFile'] = c.inPath
+        config['FILES']['OutputFile'] = c.outPath
+        config['FILES']['CSVOutput'] = str(c.outCsv)
+        config['FILES']['CSVFile'] = c.outCsvPath
+        
+        config['FEED'] = {}
+        config['FEED']['Optimize_Enabled'] = str(c.optimizeFeed)
+        config['FEED']['Increase_Enabled'] = str(c.increaseFeed)
+        config['FEED']['Max_Feed'] = str(c.feedCeiling)
+        config['FEED']['Modify_Feed_Enabled'] = str(c.reduceFeed)
+        config['FEED']['Modify_Feed_Percent'] = str(c.optimizePercent)
+        config['FEED']['Min_Feed_Enabled'] = str(c.minFeed)
+        config['FEED']['Min_Feed'] = str(c.minFeedLimit)
+        config['FEED']['Diff_Threshold'] = str(c.diffThreshold)
+
+        config['FILE_OPTIONS'] = {}
+        config['FILE_OPTIONS']['Line_Number_Option'] = str(c.lineOption) #Figure out how to deal with the radio button
+        config['FILE_OPTIONS']['Line_Number_Increment'] = str(c.numInc)
+        config['FILE_OPTIONS']['Remove_Blank_Lines'] = str(c.rBlankLines)
+        config['FILE_OPTIONS']['Remove_Comments'] = str(c.rComments)
+        config['FILE_OPTIONS']['Remove_Spaces'] = str(c.rSpaces)
+        config['FILE_OPTIONS']['Remove_Trailing_Zeroes'] = str(c.rTrailingZeroes)
+        config['FILE_OPTIONS']['End_of_block'] = c.eob
+
+        config['OTHER'] = {}
+        config['OTHER']['Block_time_factor'] = str(c.lineMs)
+        config['OTHER']['Char_time_factor'] = str(c.charMs)
+        config['OTHER']['Short_move_threshold'] = str(c.shortThreshold)
+
+        with open('settings.ini', 'w') as configfile:
+            config.write(configfile)
+
+    def readFormWriteFile(self, event):
+        c = self.read_form_config()
+        self.writeConfig(c)
+        
     def go(self, event): #read the state of all inputs, then kick off the main process
         self.read_form_config()
         
         out_result = main_process.process_files(cf)
-        print('Options Used:')
-        printAttributes(cf)
+        #print('Options Used:')
+        #printAttributes(cf)
 
-        printAttributes(out_result)
-        print('Original  : ' + str(out_result.inFileTime // 1000) + ' Seconds')
-        print('New       : ' + str(out_result.outFileTime // 1000) + ' Seconds')
-        print('Difference: ' + str((out_result.outFileTime - out_result.inFileTime) // 1000) + ' Seconds')
+        #printAttributes(out_result)
         self.write_results(out_result, cf)
 
 if __name__ == '__main__':
     app = wx.App()
     frame = appFrame(None)
     frame.Show(True)
-    defaultConfig = appConfig() #create a default configuration object
-    frame.write_form_config(defaultConfig) #and write it to the form
+    cf = frame.readConfig(appConfig())
+
+    frame.write_form_config(cf) #and write it to the form
     frame.optimize_enable(None)
     frame.csv_enable(None)
     
-    cf = appConfig()
     app.MainLoop()
 
