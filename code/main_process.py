@@ -1,30 +1,3 @@
-
-#bugs: 
-#comments on same line as a command - fixed
-#commas in comments mess up csv output - fixed
-#extra space at the end of a string before the EOB when a comment was removed
-#percent sign at start and finish - fixed
-#need to ignore M0's for the purpose of feed rate calculation - done
-#line that is only a comment but becomes blank is still printed, it should be removed - fixed
-#renumbering doesn't replace existing N word - fixed
-#feed rate is still increased even if the box is not checked - fixed
-#the percent on the last line is lost
-#time comparison results not implemented
-#error in calcDistance for helical arcs - radius and angle are bogus.  Consider discarding the "Z" axis? - fixed, needs testing
-#renumbering renumbers lines that don't need one - like the program number - fixed (except for comment, but probably don't care)
-#remove comments just makes blank lines - is that OK?
-
-#todo:
-#Move go button to the bottom outside of the tabs - done
-#Get rid of the optimize type selector - done
-#add minimum feed rate - done
-#change machine settings to sliders.  Get rid of memory option - done
-#save and restore settings - and memorize last used output file.  Maybe just auto-save on go and exit, then auto load on open?  Or better to save as default?
-#CR/LF?
-#incremental programs are untested, also metric
-#Need to enable writing and storing the value for line numbers.  The radio buttons are translated to booleans, either translate back to write back to the form or do something else - done
-#progress bar or indicator
-
 import re
 import math
 import numpy

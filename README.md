@@ -34,6 +34,25 @@ Adjust the feed rates as required on a line-by-line basis so that the next progr
 * Anything other than straight lines and arcs (G01, G02 and G03).
 * Rapids are excluded, as well as canned cycles.
 * Arcs using R (IJK is working, R - not yet)
+* Account for acceleration or lookahead in the control
+
+## Setting the settings - determining the communication speed
+The goal is to determine the relationship between the number of characters on a line and the time it takes for the control to process it.  The approach is to create two files with the exact same motion on each line - one with a small character count and one much longer.  This allows us to get a rough guess on the fixed time required per line as well as the impact of the line length.  These steps are meant for inches and IPM, however as long as you know the distance moved in the same units as your feed it shouldn't impact the calculation (mm and mm/m for example).
+
+### 1. Set up test programs
+Two samples are available in the [test_programs](/test_programs/) directory.  Each line moves .005"; the short file lines are 6 characters and the long file lines are 37.  You may need to adjust the formatting to match what your machine requires.  Note the distance and length of the lines for later.
+### 2. Set up the machine
+The idea here is to hit cycle start then judge if the program runs smoothly or not.  The test files provided here only move a total distance of .500", so it may be difficult to tell by eye or touch.  Two methods that work well are to set up a travel dial indicator and watching the needle, and listening to your servo motors - it should be easy to hear the difference between a smooth movement and stop/starts.
+### 3. Find the threshold
+Run the program, watch the machine.  If it moves smoothly, crank up the feed on the override until it doesn't.  If it isn't smooth, dial the feed down until it is.  Once you find the spot, edit the feed in the files to match what you measured (original feed * override percent), then repeat the test.  If you're dealing with small feeds (under 5 or so) it is best to repeat the test until it is tough to see a big difference between steps on the knob (within .1 or .2 ipm for example).  Record this feed rate, then repeat the test with the other file.
+### 4. Calculate rough timing
+At this point you should have a distance, two character counts, and two feed rates.  There is a calculator on the "advanced" tab that will do the math, the wordy version of this is: 
+1. Multiply the distance by the feed rate to find the elapsed time, convert to milliseconds.  Do this for both tests.
+2. Take the difference in time and the difference in character counts from both tests, then divide the time difference by the character difference.  This gives milliseconds per character.  Multiply this by 10 and this is the character time factor (this multiplicaiton is to give more resolution on the input slider).
+3. For either test, multiply the character count by the milliseconds per character, then subtract this from the total elapsed time for that test.  This gives the block (line) time factor.
+### 5. Input the results, then test
+You should now have two numbers, one is a factor for the overhead per line, the other is a factor for how the time each additional character adds.  Input these using the sliders on the "machine settings" tab.  A good first test is to take the original test file and run it with the "optimize feed rate" box checked.  If the feed rate in the output file is similar to the one you determined expirimentally that is a good sign.  This process isn't absolutely accurate, so it makes sense to do some test cuts and tweak the factors - for example, helical arcs may impose some other bottlenecks for your control so you may want to run slightly slower than the result calculated for these short lines.
+
 
 To do:
 * Test incrimental files - they should work, but all testing has been with absolute
@@ -41,4 +60,5 @@ To do:
 * Document process to measure the control comm speed
 * Provide test files
 * Build instructions
+* Input validation (there is none)
 * License and credits
