@@ -1,7 +1,7 @@
 # feed-optimizer
 Strategically adjust the feed rate in a GCODE file to allow smooth cuts when drip feeding an older control
 
-## Status: Working prototype
+### Status: Working prototype
 
 ## The problem to solve:
 Older CNC controls with limited memory can be "drip fed" a program in a variety of ways that are typically quite slow by today's standards.  As an example, the Fanuc 6MB can be fitted with an emulator for the punched paper tape reader, allowing it to run any length/size of file, streamed from a PC via serial.  There is a limit to how fast data can be transferred resulting in a situation where the physical movement of the machine is completed before the next instruction has been read.  The result is a tool that dwells between lines - making awful sounds, bad surface finish, poor tool life, etc.
@@ -13,7 +13,14 @@ Beyond buying a newer machine or retrofitting an old one, there are some strateg
 * Avoiding very short line segments
 * Tweaking options in the CAM software to generate arcs to cut surfaces instead of lines
 * Physically decreasing the size of the file by removing line numbers, spaces, comments, etc
-* **Lowering the overall feed rate in the program or overriding on the control
+* **Lowering the overall feed rate in the program or overriding on the control**
+
+The clever graphic below tries to illustrate the situation, particularly how using a single feed rate can be sub-optimal:
+![another example](img/example_diagram_2.png)
+
+* Slowing down to the lowest feed feed that avoids starving the control prevents dwelling but sacrifices speed and time for parts of the program that aren't bottlenecked (light green)
+* Using a higher feed rate appropriate for the tool causes it to dwell (red)
+* The best feed rate is variable and stays very close to the maximum, capped at the maximum feed rate for the tool
 
 ## The Goal:
 Adjust the feed rates as required on a line-by-line basis so that the next program line is ready to go just as the previous one is completed, thereby smoothing out the motion.  The effectiveness will depend on nature of the original program, and it may be possible to shorten the run time in situations where the feed rate had been lowered to the lowest smooth speed (sacrificing speed on longer moves to prevent dwelling on short ones).
