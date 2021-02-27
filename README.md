@@ -40,7 +40,7 @@ Adjust the feed rates as required on a line-by-line basis so that the next progr
 The goal is to determine the relationship between the number of characters on a line and the time it takes for the control to process it.  The approach is to create two files with the exact same motion on each line - one with a small character count and one much longer.  This allows us to get a rough guess on the fixed time required per line as well as the impact of the line length.  These steps are meant for inches and IPM, however as long as you know the distance moved in the same units as your feed it shouldn't impact the calculation (mm and mm/m for example).
 
 ### 1. Set up test programs
-Two samples are available in the [test_programs](/test_programs/) directory.  Each line moves .005"; the short file lines are 6 characters and the long file lines are 37.  You may need to adjust the formatting to match what your machine requires.  Note the distance and length of the lines for later.
+Two samples are available in the /test_programs/ directory.  Each line moves .005"; the short file lines are 6 characters and the long file lines are 37.  You may need to adjust the formatting to match what your machine requires.  Note the distance and length of the lines for later.
 ### 2. Set up the machine
 The idea here is to hit cycle start then judge if the program runs smoothly or not.  The test files provided here only move a total distance of .500", so it may be difficult to tell by eye or touch.  Two methods that work well are to set up a travel dial indicator and watching the needle, and listening to your servo motors - it should be easy to hear the difference between a smooth movement and stop/starts.
 ### 3. Find the threshold
