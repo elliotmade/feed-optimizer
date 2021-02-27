@@ -269,7 +269,7 @@ class main_frame ( wx.Frame ):
 
 		time_char_sizer = wx.BoxSizer( wx.VERTICAL )
 
-		self.time_char_slider = wx.Slider( self.tab_machine, wx.ID_ANY, 80, 0, 200, wx.DefaultPosition, wx.Size( 400,-1 ), wx.SL_HORIZONTAL|wx.SL_VALUE_LABEL )
+		self.time_char_slider = wx.Slider( self.tab_machine, wx.ID_ANY, 80, 0, 1000, wx.DefaultPosition, wx.Size( 400,-1 ), wx.SL_HORIZONTAL|wx.SL_VALUE_LABEL )
 		time_char_sizer.Add( self.time_char_slider, 0, wx.ALL, 5 )
 
 		self.m_staticText14 = wx.StaticText( self.tab_machine, wx.ID_ANY, u"Character time factor: This is the amount of time required per character in a block.  This accounts for the impact of the character count on a program line.  On this slider one notch is roughly equivalent to .1 milliseconds.\n\nExamples:\nFanuc 6mb: 80\nYasnac MX2: 30", wx.DefaultPosition, wx.Size( -1,120 ), 0 )
@@ -303,12 +303,120 @@ class main_frame ( wx.Frame ):
 
 		advanced_main_sizer.Add( advanced_button_sizer, 1, wx.EXPAND, 5 )
 
-		bSizer40 = wx.BoxSizer( wx.VERTICAL )
+		self.m_staticline6 = wx.StaticLine( self.tab_advanced, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		advanced_main_sizer.Add( self.m_staticline6, 0, wx.EXPAND |wx.ALL, 5 )
 
-		self.m_staticText17 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"CSV output provides some additional details of the original and new files, useful for debugging, also analyzing and comparing files to dial in your post processor.", wx.DefaultPosition, wx.Size( -1,50 ), 0 )
+		calc_sizer = wx.BoxSizer( wx.VERTICAL )
+
+		self.label_calc_title = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Time Factor Calculator", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.label_calc_title.Wrap( -1 )
+
+		self.label_calc_title.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
+
+		calc_sizer.Add( self.label_calc_title, 0, wx.ALL, 5 )
+
+		calc_dist_sizer = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.label_distance = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Distance:", wx.DefaultPosition, wx.Size( 70,-1 ), 0 )
+		self.label_distance.Wrap( -1 )
+
+		calc_dist_sizer.Add( self.label_distance, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.calc_distance_text = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		calc_dist_sizer.Add( self.calc_distance_text, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+
+		calc_sizer.Add( calc_dist_sizer, 1, wx.EXPAND, 5 )
+
+		calc_1_sizer = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.label_feed1 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Feed Rate 1:", wx.DefaultPosition, wx.Size( 70,-1 ), 0 )
+		self.label_feed1.Wrap( -1 )
+
+		calc_1_sizer.Add( self.label_feed1, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.calc_feed1_text = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		calc_1_sizer.Add( self.calc_feed1_text, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.label_char1 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Character Count 1:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.label_char1.Wrap( -1 )
+
+		calc_1_sizer.Add( self.label_char1, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.calc_char1_text = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		calc_1_sizer.Add( self.calc_char1_text, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+
+		calc_sizer.Add( calc_1_sizer, 1, wx.EXPAND, 5 )
+
+		calc_2_sizer = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.label_feed2 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Feed Rate 2:", wx.DefaultPosition, wx.Size( 70,-1 ), 0 )
+		self.label_feed2.Wrap( -1 )
+
+		calc_2_sizer.Add( self.label_feed2, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.calc_feed2_text = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		calc_2_sizer.Add( self.calc_feed2_text, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.label_char2 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Character Count 2:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.label_char2.Wrap( -1 )
+
+		calc_2_sizer.Add( self.label_char2, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.calc_char2_text = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		calc_2_sizer.Add( self.calc_char2_text, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+
+		calc_sizer.Add( calc_2_sizer, 1, wx.EXPAND, 5 )
+
+		calc_result_sizer = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.calc_go_button = wx.Button( self.tab_advanced, wx.ID_ANY, u"Calculate", wx.DefaultPosition, wx.Size( 70,-1 ), 0 )
+		calc_result_sizer.Add( self.calc_go_button, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.label_line_result = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Block:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.label_line_result.Wrap( -1 )
+
+		calc_result_sizer.Add( self.label_line_result, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.line_result = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		self.line_result.Enable( False )
+
+		calc_result_sizer.Add( self.line_result, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.label_char_result = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Character:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.label_char_result.Wrap( -1 )
+
+		calc_result_sizer.Add( self.label_char_result, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		self.char_result = wx.TextCtrl( self.tab_advanced, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 50,-1 ), 0 )
+		self.char_result.Enable( False )
+
+		calc_result_sizer.Add( self.char_result, 0, wx.ALL, 5 )
+
+
+		calc_sizer.Add( calc_result_sizer, 1, wx.EXPAND, 5 )
+
+
+		advanced_main_sizer.Add( calc_sizer, 1, wx.EXPAND, 5 )
+
+		self.m_staticline51 = wx.StaticLine( self.tab_advanced, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		advanced_main_sizer.Add( self.m_staticline51, 0, wx.EXPAND |wx.ALL, 5 )
+
+		csv_sizer = wx.BoxSizer( wx.VERTICAL )
+
+		self.csv_out_title = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"CSV Output", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.csv_out_title.Wrap( -1 )
+
+		self.csv_out_title.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
+
+		csv_sizer.Add( self.csv_out_title, 0, wx.ALL, 5 )
+
+		self.m_staticText17 = wx.StaticText( self.tab_advanced, wx.ID_ANY, u"Provides some additional details of the original and new files, useful for debugging, also analyzing and comparing files to dial in your post processor.", wx.DefaultPosition, wx.Size( -1,50 ), 0 )
 		self.m_staticText17.Wrap( 500 )
 
-		bSizer40.Add( self.m_staticText17, 0, wx.ALL, 5 )
+		csv_sizer.Add( self.m_staticText17, 0, wx.ALL, 5 )
 
 		file_csv_sizer = wx.BoxSizer( wx.HORIZONTAL )
 
@@ -324,10 +432,10 @@ class main_frame ( wx.Frame ):
 		file_csv_sizer.Add( self.csv_text, 0, wx.ALL, 5 )
 
 
-		bSizer40.Add( file_csv_sizer, 1, wx.EXPAND, 5 )
+		csv_sizer.Add( file_csv_sizer, 1, wx.EXPAND, 5 )
 
 
-		advanced_main_sizer.Add( bSizer40, 1, wx.EXPAND, 5 )
+		advanced_main_sizer.Add( csv_sizer, 1, wx.EXPAND, 5 )
 
 
 		self.tab_advanced.SetSizer( advanced_main_sizer )
@@ -387,6 +495,7 @@ class main_frame ( wx.Frame ):
 		self.optimize_feed_checkbox.Bind( wx.EVT_CHECKBOX, self.optimize_enable )
 		self.save_settings_button.Bind( wx.EVT_BUTTON, self.readFormWriteFile )
 		self.restore_settings_button.Bind( wx.EVT_BUTTON, self.readConfig )
+		self.calc_go_button.Bind( wx.EVT_BUTTON, self.calcFactors )
 		self.csv_checkbox.Bind( wx.EVT_CHECKBOX, self.csv_enable )
 		self.csv_button.Bind( wx.EVT_BUTTON, self.browse_csv )
 		self.go_button.Bind( wx.EVT_BUTTON, self.go )
@@ -409,6 +518,9 @@ class main_frame ( wx.Frame ):
 		event.Skip()
 
 	def readConfig( self, event ):
+		event.Skip()
+
+	def calcFactors( self, event ):
 		event.Skip()
 
 	def csv_enable( self, event ):

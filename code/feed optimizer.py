@@ -268,6 +268,26 @@ class appFrame(ui.main_frame):
         #printAttributes(out_result)
         self.write_results(out_result, cf)
 
+    def calcFactors(self, event): #read the calculator inputs, update some things for an output
+        dist = float(self.calc_distance_text.GetValue())
+        feed1 = float(self.calc_feed1_text.GetValue())
+        feed2 = float(self.calc_feed2_text.GetValue())
+        char1 = int(self.calc_char1_text.GetValue())
+        char2 = int(self.calc_char2_text.GetValue())
+        
+        ms1 = dist/feed1*60000
+        ms2 = dist/feed2*60000
+        timeDiff = abs(ms1 - ms2)
+        charDiff = abs(char1 - char2)
+
+        msPerChar = round(timeDiff / charDiff, 1)
+        msPerLine = round(ms1 - (char1 * msPerChar), 1)
+
+        if msPerLine < 0: msPerLine = 0 #there are situations where you can have negative time per block, need to figure that out
+
+        self.line_result.SetValue(str(msPerLine))
+        self.char_result.SetValue(str(msPerChar * 10))
+        
 if __name__ == '__main__':
     app = wx.App()
     frame = appFrame(None)
