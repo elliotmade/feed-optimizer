@@ -6,3 +6,17 @@ settings.ini
 code/__pycache__/main_process.cpython-39.pyc
 .test
 code/__pycache__/feed_ui.cpython-39.pyc
+build/feed optimizer/Analysis-00.toc
+build/feed optimizer/base_library.zip
+build/feed optimizer/EXE-00.toc
+build/feed optimizer/feed optimizer.exe.manifest
+build/feed optimizer/PKG-00.pkg
+build/feed optimizer/PKG-00.toc
+build/feed optimizer/PYZ-00.pyz
+build/feed optimizer/PYZ-00.toc
+build/feed optimizer/Tree-00.toc
+build/feed optimizer/Tree-01.toc
+build/feed optimizer/Tree-02.toc
+build/feed optimizer/warn-feed optimizer.txt
+build/feed optimizer/xref-feed optimizer.html
+code/__pycache__/feed optimizer.cpython-39.pyc
