@@ -50,6 +50,8 @@ class fileLine:
         self.finalFeed = 0
         self.modFeedThisLine = False
         self.feedChunkIndex = None
+        self.originalLineTime = None
+        self.finalLineTime = None
 
         chunkIndex = 0
         for chunk in self.lineChunks:
@@ -148,7 +150,7 @@ class fileLine:
     def csvLine(self):
 
         #"Original Line,New Line,Start Point,End Point,Distance,Read Time,Move Time,Dwell,Short"
-        list = ['"' + self.lineStr + '"', '"' + self.newLineStr + '"', self.startPoint.string(), self.endPoint.string(), str(self.distance), str(self.f), str(self.readTime), str(self.origMoveTime), str(self.isShort), str(self.dwell), str(self.idealFeed), str(self.newLineRead), str(self.finalFeed), str(self.modFeedThisLine)]
+        list = ['"' + self.lineStr + '"', '"' + self.newLineStr + '"', self.startPoint.string(), self.endPoint.string(), str(self.distance), str(self.f), str(self.readTime), str(self.origMoveTime), str(self.originalLineTime), str(self.isShort), str(self.dwell), str(self.idealFeed), str(self.newLineRead), str(self.finalLineTime), str(self.finalFeed), str(self.modFeedThisLine)]
         s = ','.join(list) + '\n'
         return s
 
@@ -317,6 +319,7 @@ def process_files(c):
     
     #First loop: the input file
     curLine = 0
+    tempTime = 0
     for inLine in inFile:
         #create a line object
         lines.append(fileLine(inLine))
@@ -349,13 +352,17 @@ def process_files(c):
 
         #sum up the total time for the original file
         if lines[curLine].origMoveTime is not None and lines[curLine].readTime is not None:
-            out_results.inFileTime += max(lines[curLine].origMoveTime, lines[curLine].readTime)
+            tempTime = max(lines[curLine].origMoveTime, lines[curLine].readTime)
         elif lines[curLine].origMoveTime is not None:
-            out_results.inFileTime += lines[curLine].origMoveTime
+            tempTime = lines[curLine].origMoveTime
         elif lines[curLine].readTime is not None:
-            out_results.inFileTime += lines[curLine].readTime
+            tempTime = lines[curLine].readTime
         else:
-             out_results.inFileTime += 0   
+             tempTime += 0   
+
+        out_results.inFileTime += tempTime
+        lines[curLine].originalLineTime = tempTime
+
 
         #end of loop
         curLine += 1
@@ -369,7 +376,7 @@ def process_files(c):
     outFile = open(c.outPath, 'w')
     if c.outCsv == True:
         csvOut = open(c.outCsvPath, 'w')
-        csvOut.write('Original Line,New Line,Start Point,End Point,Distance,Original Feed,Original Read Time,Move Time,Short,Dwell,Maximum Feed,New Read Time,Final Feed,Modify Feed On This Line?\n')
+        csvOut.write('Original Line,New Line,Start Point,End Point,Distance,Original Feed,Original Read Time,Original Line Time,Move Time,Short,Dwell,Maximum Feed,New Read Time,Final Line Time,Final Feed,Modify Feed On This Line?\n')
     
     #second loop: calculate the best feed rate and output a file
     curOutLine = 0
@@ -466,6 +473,9 @@ def process_files(c):
 
             #calculate the final time for the line, greater of read or travel
             out_results.outFileTime += max(calcReadTime(len(outLine.newLineStr), c), calcMoveTime(outLine.distance, lines[curOutLine].finalFeed))
+
+            #also add it back to the line to be printed in the CSV
+            lines[curOutLine].finalLineTime = max(calcReadTime(len(outLine.newLineStr), c), calcMoveTime(outLine.distance, lines[curOutLine].finalFeed))
 
             #write the output file
             if c.rBlankLines == True and lines[curOutLine].isBlank == True:

@@ -12,7 +12,7 @@ class appConfig: #object to store all configuration variables for the main proce
     #need to make a duplicate for storing default values, give the class a copy method and use a copy for the one sent to the processing function
     inPath = ''
     outPath = ''
-    outCsv = True
+    outCsv = False
     outCsvPath = ''
     eob = ';'
     lineOption = 0
@@ -22,7 +22,7 @@ class appConfig: #object to store all configuration variables for the main proce
     rComments = False
     rBlankLines = False
     rSpaces = False
-    rTrailingZeroes = True
+    rTrailingZeroes = False
     shortThreshold = .001
     optimizeFeed = False
     increaseFeed = False
@@ -33,7 +33,7 @@ class appConfig: #object to store all configuration variables for the main proce
     minFeedLimit = .25
     diffThreshold = .3 
 
-    lineMs = 100
+    lineMs = 120
     charMs = 8
 
 class appFrame(ui.main_frame):
