@@ -418,7 +418,6 @@ def process_files(c):
                 lines[curOutLine].isBlank == True
             
             #compare the time required for the current move to the time required to have the next one ready 
-            #how many lines can exist in the controls' buffer?  if it holds 3, we need to make sure the 4th is in time when the 3 complete
             accumulatedReadTime = 0
             if outLine.isMove == True and outLine.distance > 0 and curOutLine < len(lines):
 

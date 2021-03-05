@@ -9,7 +9,6 @@ def printAttributes(object):
     print(''.join("%s: %s \n" % item for item in attrs.items()))
 
 class appConfig: #object to store all configuration variables for the main process
-    #need to make a duplicate for storing default values, give the class a copy method and use a copy for the one sent to the processing function
     inPath = ''
     outPath = ''
     outCsv = False
@@ -34,7 +33,7 @@ class appConfig: #object to store all configuration variables for the main proce
     diffThreshold = .3 
 
     lineMs = 120
-    charMs = 8
+    charMs = 16
 
 class appFrame(ui.main_frame):
     #constructor
